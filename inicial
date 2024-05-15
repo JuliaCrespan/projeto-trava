@@ -12,3 +12,8 @@ const uint8_t* sabores[NUM_SABORES] = { bitmap1, bitmap2, bitmap3, bitmap4, bitm
 
 // Variáveis para armazenar a seleção
 int saborSelecionado = 0;
+
+  // Configurando os pinos dos botões como entrada
+  pinMode(buttonUpPin, INPUT);
+  pinMode(buttonDownPin, INPUT);
+  pinMode(buttonConfirmPin, INPUT);
