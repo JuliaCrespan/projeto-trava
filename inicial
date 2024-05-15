@@ -1,19 +1,16 @@
-// Inicializando o display TFT
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+const int NUM_ITEMS = 8; // number of items in the list and also the number of screenshots and screenshots with QR codes (other screens)
+const int MAX_ITEM_LENGTH = 20; // maximum characters for the item name
 
-// Definindo os pinos dos botões
-const int buttonUpPin = 2;      // Botão para navegar para cima
-const int buttonDownPin = 3;    // Botão para navegar para baixo
-const int buttonConfirmPin = 4; // Botão para confirmar seleção
-
-// Número de sabores e bitmaps dos sabores (substitua por bitmaps reais)
-#define NUM_SABORES 8
-const uint8_t* sabores[NUM_SABORES] = { bitmap1, bitmap2, bitmap3, bitmap4, bitmap5, bitmap6, bitmap7, bitmap8 };
-
-// Variáveis para armazenar a seleção
-int saborSelecionado = 0;
-
-  // Configurando os pinos dos botões como entrada
-  pinMode(buttonUpPin, INPUT);
-  pinMode(buttonDownPin, INPUT);
-  pinMode(buttonConfirmPin, INPUT);
+char menu_items [NUM_ITEMS] [MAX_ITEM_LENGTH] = {  // array with item names
+  { "melancia" }, 
+  { "pessego" }, 
+  { "frutas tropicais" }, 
+  { "normal" }, 
+  { "açai" }, 
+  { "zero" },   
+  { "figo" }, 
+  { "coco" }
+ };
+#define BUTTON_UP_PIN 12 // pin UP button 
+#define BUTTON_SELECT_PIN 8 // pin SELECT button
+#define BUTTON_DOWN_PIN 4 // pin DOWN button
