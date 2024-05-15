@@ -1,0 +1,14 @@
+// Inicializando o display TFT
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+
+// Definindo os pinos dos botões
+const int buttonUpPin = 2;      // Botão para navegar para cima
+const int buttonDownPin = 3;    // Botão para navegar para baixo
+const int buttonConfirmPin = 4; // Botão para confirmar seleção
+
+// Número de sabores e bitmaps dos sabores (substitua por bitmaps reais)
+#define NUM_SABORES 8
+const uint8_t* sabores[NUM_SABORES] = { bitmap1, bitmap2, bitmap3, bitmap4, bitmap5, bitmap6, bitmap7, bitmap8 };
+
+// Variáveis para armazenar a seleção
+int saborSelecionado = 0;
