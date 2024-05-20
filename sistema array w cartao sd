@@ -1,0 +1,98 @@
+#include <TFT_eSPI.h>  // Biblioteca do display TFT
+#include <SD.h>        // Biblioteca para o cartão SD
+#include <SPI.h>
+
+// Inicialização do display
+TFT_eSPI tft = TFT_eSPI();
+
+// Definição dos pinos dos botões
+const int nextButtonPin = 25;
+const int prevButtonPin = 26;
+const int selectButtonPin = 27;
+
+// Definição do pino do cartão SD
+const int csPin = 5;
+
+// Definição dos sabores e seus arquivos de imagem correspondentes
+const char* flavors[] = {
+    "/coco.jpg",
+    "/melancia.jpg",
+    "/frutas_tropicais.jpg",
+    "/figo.jpg",
+    "/zero.jpg",
+    "/acai.jpg",
+    "/pessego.jpg",
+    "/normal.jpg"
+};
+
+// Número de sabores
+const int numFlavors = sizeof(flavors) / sizeof(flavors[0]);
+
+// Índice atual do sabor
+int currentFlavorIndex = 0;
+
+// Indica se uma compra já foi feita
+bool purchaseMade = false;
+
+void setup() {
+    // Inicializa a comunicação serial
+    Serial.begin(115200);
+
+    // Inicializa o cartão SD
+    if (!SD.begin(csPin)) {
+        Serial.println("Erro ao inicializar o cartão SD");
+        return;
+    }
+
+    // Inicializa o display
+    tft.begin();
+    tft.setRotation(1);
+    tft.fillScreen(TFT_BLACK);
+
+    // Configura os pinos dos botões como entrada
+    pinMode(nextButtonPin, INPUT_PULLUP);
+    pinMode(prevButtonPin, INPUT_PULLUP);
+    pinMode(selectButtonPin, INPUT_PULLUP);
+
+    // Exibe a imagem inicial (primeira da lista)
+    displayImage(currentFlavorIndex);
+}
+
+void loop() {
+    // Verifica se o botão "next" foi pressionado
+    if (digitalRead(nextButtonPin) == LOW) {
+        delay(200);  // Debounce
+        currentFlavorIndex = (currentFlavorIndex + 1) % numFlavors;
+        displayImage(currentFlavorIndex);
+        while(digitalRead(nextButtonPin) == LOW); // Espera o botão ser liberado
+    }
+
+    // Verifica se o botão "prev" foi pressionado
+    if (digitalRead(prevButtonPin) == LOW) {
+        delay(200);  // Debounce
+        currentFlavorIndex = (currentFlavorIndex - 1 + numFlavors) % numFlavors;
+        displayImage(currentFlavorIndex);
+        while(digitalRead(prevButtonPin) == LOW); // Espera o botão ser liberado
+    }
+
+    // Verifica se o botão "select" foi pressionado
+    if (digitalRead(selectButtonPin) == LOW && !purchaseMade) {
+        delay(200);  // Debounce
+        purchaseMade = true;
+        Serial.print("Red Bull selecionado: ");
+        Serial.println(flavors[currentFlavorIndex]);
+        while(digitalRead(selectButtonPin) == LOW); // Espera o botão ser liberado
+    }
+}
+
+// Função para exibir a imagem correspondente ao índice atual
+void displayImage(int index) {
+    tft.fillScreen(TFT_BLACK);  // Limpa a tela
+    File jpgFile = SD.open(flavors[index]);
+    if (jpgFile) {
+        tft.drawJpg(jpgFile, 0, 0);
+        jpgFile.close();
+    } else {
+        Serial.println("Erro ao abrir a imagem");
+    }
+}
