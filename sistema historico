@@ -1,0 +1,24 @@
+void savePurchase(const char* flavor) {
+    File file = SPIFFS.open(purchaseHistoryFile, FILE_APPEND);
+    if (!file) {
+        Serial.println("Erro ao abrir o arquivo de histórico de compras");
+        return;
+    }
+    file.println(flavor);
+    file.close();
+}
+
+// Função para carregar e exibir o histórico de compras
+void loadPurchaseHistory() {
+    File file = SPIFFS.open(purchaseHistoryFile, FILE_READ);
+    if (!file) {
+        Serial.println("Erro ao abrir o arquivo de histórico de compras");
+        return;
+    }
+    Serial.println("Histórico de compras:");
+    while (file.available()) {
+        String line = file.readStringUntil('\n');
+        Serial.println(line);
+    }
+    file.close();
+}
