@@ -1,0 +1,123 @@
+#include <SPI.h>
+#include <SD.h>  // Biblioteca SD embutida no Arduino IDE
+#include <ILI9341_due.h>  // Biblioteca do display TFT
+#include <JPEGDecoder.h>  // Biblioteca para decodificar JPEGs
+
+// Definição dos pinos dos botões
+const int nextButtonPin = 25;
+const int prevButtonPin = 26;
+const int selectButtonPin = 27;  // Botão de confirmação
+
+// Definição do pino do cartão SD
+const int csPin = 5;
+
+// Definição dos sabores e seus arquivos de imagem correspondentes
+const char* flavors[] = {
+    "/coco.jpg",
+    "/melancia.jpg",
+    "/frutas_tropicais.jpg",
+    "/figo.jpg",
+    "/zero.jpg",
+    "/acai.jpg",
+    "/pessego.jpg",
+    "/normal.jpg"
+};
+
+// Número de sabores
+const int numFlavors = sizeof(flavors) / sizeof(flavors[0]);
+
+// Índice atual do sabor
+int currentFlavorIndex = 0;  // Inicializa com o primeiro sabor
+
+// Inicialização do display
+ILI9341_due tft = ILI9341_due(TFT_CS, TFT_DC, TFT_RST);
+
+void setup() {
+    Serial.begin(9600);
+
+    // Inicializa o cartão SD
+    if (!SD.begin(csPin)) {
+        Serial.println("Erro ao inicializar o cartão SD");
+        while (1); // Interrompe a execução se não conseguir inicializar o SD
+    }
+
+    // Inicializa o display
+    tft.begin();
+    tft.setRotation(0);  // Ajuste a rotação conforme necessário
+    tft.fillScreen(TFT_BLACK);
+
+    // Configura os pinos dos botões como entrada
+    pinMode(nextButtonPin, INPUT_PULLUP);
+    pinMode(prevButtonPin, INPUT_PULLUP);
+    pinMode(selectButtonPin, INPUT_PULLUP);
+
+    // Exibe a imagem inicial (primeira da lista)
+    drawJpegImage(flavors[currentFlavorIndex]);
+}
+
+void loop() {
+    // Verifica se o botão "next" foi pressionado
+    if (digitalRead(nextButtonPin) == LOW) {
+        currentFlavorIndex = (currentFlavorIndex + 1) % numFlavors;
+        drawJpegImage(flavors[currentFlavorIndex]);
+        while (digitalRead(nextButtonPin) == LOW); // Espera o botão ser liberado
+    }
+
+    // Verifica se o botão "prev" foi pressionado
+    if (digitalRead(prevButtonPin) == LOW) {
+        currentFlavorIndex = (currentFlavorIndex - 1 + numFlavors) % numFlavors;
+        drawJpegImage(flavors[currentFlavorIndex]);
+        while (digitalRead(prevButtonPin) == LOW); // Espera o botão ser liberado
+    }
+
+    // Verifica se o botão "select" foi pressionado para confirmação
+    if (digitalRead(selectButtonPin) == LOW) {
+        // Exibe a imagem atual e a mensagem de confirmação
+        tft.fillScreen(TFT_BLACK);  // Limpa a tela
+        drawJpegImage(flavors[currentFlavorIndex]);  // Exibe a imagem atual
+        displayConfirmationMessage();  // Exibe a mensagem de confirmação
+
+        // Aguarda até que o botão de confirmação seja pressionado
+        while (digitalRead(selectButtonPin) == LOW);
+        delay(200); // Delay para debounce
+        tft.fillScreen(TFT_BLACK);  // Limpa a tela após a confirmação
+    }
+}
+
+// Função para desenhar uma imagem JPEG na tela
+void drawJpegImage(const char* filename) {
+    tft.fillScreen(TFT_BLACK);  // Limpa a tela
+
+    File jpgFile = SD.open(filename);
+    if (jpgFile) {
+        JPEGDecoder decoder;
+        decoder.begin(jpgFile);
+
+        if (decoder.decode()) {
+            // Define a janela onde a imagem será desenhada
+            tft.setAddrWindow(0, 0, decoder.width, decoder.height);
+
+            // Desenha a imagem JPEG na tela
+            for (int i = 0; i < decoder.width * decoder.height; i++) {
+                uint16_t color = decoder.getPixel();
+                tft.pushColor(color);
+            }
+        } else {
+            Serial.println("Erro ao decodificar a imagem JPEG");
+        }
+
+        jpgFile.close();
+    } else {
+        Serial.println("Erro ao abrir o arquivo JPEG");
+    }
+}
+
+// Função para exibir uma mensagem de confirmação
+void displayConfirmationMessage() {
+    tft.setTextColor(TFT_WHITE);
+    tft.setTextSize(2);
+    tft.setCursor(10, 10);
+    tft.print("Pressione o botão novamente");
+    tft.setCursor(10, 30);
+    tft.print("para confirmar.");
+}
